@@ -38,12 +38,14 @@
 class Vietduino_Led : public Vietduino_Task
 {
   public:
+    Vietduino_Led();
     /**
      * By using this constructor you will be create a perpetual blinker with even on and off time-spans.
      *  outPin - The pin to blink.
      *  _ledActive_ is LOW or HIGH when ON (default is HIGH).
      */
     Vietduino_Led(byte outPin, byte _ledActive_ = 1);
+    void begin(byte outPin, byte _ledActive_ = 1);
 
     virtual ~Vietduino_Led(){}
 

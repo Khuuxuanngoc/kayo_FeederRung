@@ -24,7 +24,16 @@
 #include "Vietduino_Led.h"
 #include "Vietduino_Manager_Priority.h"
 
+Vietduino_Led::Vietduino_Led() : Vietduino_Task(0, &(Vietduino_Led::stepState)){
+    
+}
+
 Vietduino_Led::Vietduino_Led(byte outPin, byte _ledActive_) : Vietduino_Task(0, &(Vietduino_Led::stepState)){
+    this->init(outPin, _ledActive_, 0, 0, 0, 0);
+    this->stop();
+}
+
+void Vietduino_Led::begin(byte outPin, byte _ledActive_){
     this->init(outPin, _ledActive_, 0, 0, 0, 0);
     this->stop();
 }

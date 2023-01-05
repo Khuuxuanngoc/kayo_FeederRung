@@ -117,7 +117,7 @@
         #define NK_DIRECT_WRITE_LOW(base, mask) (digitalWrite(mask,0)) //GPIO_OUT_W1TC_ADDRESS
         #define NK_DIRECT_WRITE_HIGH(base, mask) (digitalWrite(mask,1)) //GPIO_OUT_W1TS_ADDRESS
         #define NK_DIRECT_MODE_PULLUP(base, p) pinMode(p, INPUT_PULLUP)
-    #else
+    #elif defined(OLD_ESP8266)
         #define NK_PIN_TO_BASEREG(pin) ((volatile uint32_t*) GPO)
         #define NK_PIN_TO_BITMASK(pin) (1 << pin)
         #define NK_IO_REG_TYPE uint32_t
@@ -127,6 +127,17 @@
         #define NK_DIRECT_MODE_OUTPUT(base, mask) (GPE |= (mask)) //GPIO_ENABLE_W1TS_ADDRESS
         #define NK_DIRECT_WRITE_LOW(base, mask) (GPOC = (mask)) //GPIO_OUT_W1TC_ADDRESS
         #define NK_DIRECT_WRITE_HIGH(base, mask) (GPOS = (mask)) //GPIO_OUT_W1TS_ADDRESS
+        #define NK_DIRECT_MODE_PULLUP(base, p) pinMode(p, INPUT_PULLUP)
+    #else
+        #define NK_PIN_TO_BASEREG(pin) ((volatile uint32_t*) GPO)
+        #define NK_PIN_TO_BITMASK(pin) (pin)
+        #define NK_IO_REG_TYPE uint32_t
+        #define NK_IO_REG_ASM
+        #define NK_DIRECT_READ(base, mask) (digitalRead(mask)) //GPIO_IN_ADDRESS
+        #define NK_DIRECT_MODE_INPUT(base, mask) (pinMode(mask, INPUT)) //GPIO_ENABLE_W1TC_ADDRESS
+        #define NK_DIRECT_MODE_OUTPUT(base, mask) (pinMode(mask, OUTPUT)) //GPIO_ENABLE_W1TS_ADDRESS
+        #define NK_DIRECT_WRITE_LOW(base, mask) (digitalWrite(mask,0)) //GPIO_OUT_W1TC_ADDRESS
+        #define NK_DIRECT_WRITE_HIGH(base, mask) (digitalWrite(mask,1)) //GPIO_OUT_W1TS_ADDRESS
         #define NK_DIRECT_MODE_PULLUP(base, p) pinMode(p, INPUT_PULLUP)
     #endif
 

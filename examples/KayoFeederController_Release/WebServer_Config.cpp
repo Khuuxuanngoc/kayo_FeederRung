@@ -6,12 +6,15 @@
 
 extern AsyncWebServer server;
 extern unsigned long timeRunFeeder_ms;
+extern unsigned long timeDetectFeeder_ms;
 
 const char *PARAM_STRING = "inputString";
 const char *PARAM_INT = "inputInt";
 const char *PARAM_FLOAT = "inputFloat";
 
-#define PARAM_TIME_RUN_FEEDER  "inputTimeRunFeeder"
+#define PARAM_TIME_RUN_FEEDER       "inputTimeRunFeeder"
+#define PARAM_TIME_Detect_FEEDER    "inputTimeDetectFeeder"
+#define PARAM_PINOUTPUT             "inputPinOutput"
 
 // HTML web page to handle 3 input fields (inputString, inputInt, inputFloat)
 const char index_html[] PROGMEM = R"rawliteral(
@@ -25,15 +28,11 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
   </script></head><body>
   <form action="/get" target="hidden-form">
-    inputString (current value %inputString%): <input type="text" name="inputString">
+    input pin output (current value %inputPinOutput%): <input type="number " name="inputPinOutput">
     <input type="submit" value="Submit" onclick="submitMessage()">
   </form><br>
   <form action="/get" target="hidden-form">
-    inputInt (current value %inputInt%): <input type="number " name="inputInt">
-    <input type="submit" value="Submit" onclick="submitMessage()">
-  </form><br>
-  <form action="/get" target="hidden-form">
-    inputFloat (current value %inputFloat%): <input type="number " name="inputFloat">
+    inputTimeDetectFeeder (current value %inputTimeDetectFeeder%): <input type="number " name="inputTimeDetectFeeder">
     <input type="submit" value="Submit" onclick="submitMessage()">
   </form><br>
   <form action="/get" target="hidden-form">
@@ -91,22 +90,13 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
 // Replaces placeholder with stored values
 String processor(const String &var)
 {
-    // Serial.println(var);
-    if (var == "inputString")
-    {
-        return readFile(SPIFFS, "/inputString.txt");
-    }
-    else if (var == "inputInt")
-    {
-        return readFile(SPIFFS, "/inputInt.txt");
-    }
-    else if (var == "inputFloat")
-    {
-        return readFile(SPIFFS, "/inputFloat.txt");
-    }
-    else if (var == PARAM_TIME_RUN_FEEDER)   // y22m07d04 kxn
+    if (var == PARAM_TIME_RUN_FEEDER)   // y22m07d04 kxn
     {
         return readFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_RUN_FEEDER));
+    }
+    else if (var == PARAM_TIME_Detect_FEEDER)   // y22m07d04 kxn
+    {
+        return readFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_Detect_FEEDER));
     }
     return String();
 }
@@ -130,17 +120,9 @@ void SPIFFS_Init()
 
 void Read_Config()
 {
-    String yourInputString = readFile(SPIFFS, "/inputString.txt");
-    Serial.print("*** Your inputString: ");
-    Serial.println(yourInputString);
-
-    int yourInputInt = readFile(SPIFFS, "/inputInt.txt").toInt();
-    Serial.print("*** Your inputInt: ");
-    Serial.println(yourInputInt);
-
-    float yourInputFloat = readFile(SPIFFS, "/inputFloat.txt").toFloat();
-    Serial.print("*** Your inputFloat: ");
-    Serial.println(yourInputFloat);
+    timeDetectFeeder_ms = readFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_Detect_FEEDER)).toInt();
+    Serial.print("*** Your timeDetectFeeder_ms: ");
+    Serial.println(timeDetectFeeder_ms);
 
     timeRunFeeder_ms = readFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_RUN_FEEDER)).toInt();
     Serial.print("*** Your inputTimeRunFeeder: ");
@@ -159,25 +141,28 @@ void Config_Init()
               {
     String inputMessage;
     // GET inputString value on <ESP_IP>/get?inputString=<inputMessage>
-    if (request->hasParam(PARAM_STRING)) {
-      inputMessage = request->getParam(PARAM_STRING)->value();
-      writeFile(SPIFFS, "/inputString.txt", inputMessage.c_str());
-    }
-    // GET inputInt value on <ESP_IP>/get?inputInt=<inputMessage>
-    else if (request->hasParam(PARAM_INT)) {
-      inputMessage = request->getParam(PARAM_INT)->value();
-      writeFile(SPIFFS, "/inputInt.txt", inputMessage.c_str());
-    }
-    // GET inputFloat value on <ESP_IP>/get?inputFloat=<inputMessage>
-    else if (request->hasParam(PARAM_FLOAT)) {
-      inputMessage = request->getParam(PARAM_FLOAT)->value();
-      writeFile(SPIFFS, "/inputFloat.txt", inputMessage.c_str());
-    }
+    
     // y22m07d04 kxn
-    else if (request->hasParam(PARAM_TIME_RUN_FEEDER)) {
+    if (request->hasParam(PARAM_TIME_RUN_FEEDER)) {
       inputMessage = request->getParam(PARAM_TIME_RUN_FEEDER)->value();
       writeFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_RUN_FEEDER), inputMessage.c_str());
       timeRunFeeder_ms = inputMessage.toInt();
+    }
+    else if (request->hasParam(PARAM_TIME_Detect_FEEDER)) {
+      inputMessage = request->getParam(PARAM_TIME_Detect_FEEDER)->value();
+      writeFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_Detect_FEEDER), inputMessage.c_str());
+      timeDetectFeeder_ms = inputMessage.toInt();
+    }
+    else if (request->hasParam(PARAM_PINOUTPUT)) {
+      inputMessage = request->getParam(PARAM_TIME_Detect_FEEDER)->value();
+      //   writeFile(SPIFFS, MY_FILE_TXT(PARAM_TIME_Detect_FEEDER), inputMessage.c_str());
+      int tempPin = inputMessage.toInt();
+        int tempLastValue = digitalRead(tempPin);
+        pinMode(tempPin, OUTPUT);
+        digitalWrite(tempPin, !tempLastValue);
+        delay(1000);
+        digitalWrite(tempPin, tempLastValue);
+        pinMode(tempPin, INPUT);
     }
     else {
       inputMessage = "No message sent";

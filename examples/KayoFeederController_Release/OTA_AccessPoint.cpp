@@ -20,7 +20,7 @@
     Go to http://192.168.4.1 in a web browser to upload Firmware
     https://randomnerdtutorials.com/esp8266-nodemcu-ota-over-the-air-arduino/
 */
-const char* ssid = "noFree";
+const char* ssid = "KayoFeedernoFree";
 const char* password = "likehshop";
 
 AsyncWebServer server(80);
